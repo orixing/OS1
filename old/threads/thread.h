@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/fixed_point.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -100,6 +101,15 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+    
+    /*new members are all below*/
+    int64_t blocked_ticks;              /* Ticks of thread should be blocked through timer_sleep() */
+
+    struct lock *lock_waiting;          /* Lock that this thread is waiting for */
+    struct list locks_holding;          /* Locks that this thread hold */
+    int old_priority;                   /* Priority before donation */
+    int nice;                           /* Nice of thread */
+    real recent_cpu;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -130,12 +140,22 @@ void thread_yield (void);
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
 
+/*new function*/
+void check_thread_sleep (struct thread* t,void *aux);
+
 int thread_get_priority (void);
 void thread_set_priority (int);
+int thread_cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux);
 
 int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
+void increase_recent_cpu(void);
+void update_priority(struct thread *t,void *aux);
+real update_load_avg(void);
+void update_recent_cpu(struct thread* t,void *aux);
+
 #endif /* threads/thread.h */
+
