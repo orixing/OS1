@@ -28,6 +28,8 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+static struct list block_list;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -96,6 +98,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init (&block_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -229,6 +232,7 @@ thread_block (void)
   ASSERT (!intr_context ());
   ASSERT (intr_get_level () == INTR_OFF);
 
+  list_insert(&block_list,&thread_current()->block_elem);
   thread_current ()->status = THREAD_BLOCKED;
   schedule ();
 }
@@ -250,6 +254,7 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
+  list_remove (&t->block_elem);
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
@@ -338,7 +343,7 @@ thread_yield (void)
 void
 check_thread_sleep (struct thread* t,void *aux) 
 {
-  if(t->status==THREAD_BLOCKED && t->blocked_ticks>0){
+  if(t->blocked_ticks>0){
     t->blocked_ticks--;
     if(t->blocked_ticks==0)
       thread_unblock(t);
@@ -357,6 +362,21 @@ thread_foreach (thread_action_func *func, void *aux)
        e = list_next (e))
     {
       struct thread *t = list_entry (e, struct thread, allelem);
+      func (t, aux);
+    }
+}
+
+void
+block_thread_foreach (thread_action_func *func, void *aux)
+{
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  for (e = list_begin (&block_list); e != list_end (&block_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, block_elem);
       func (t, aux);
     }
 }

@@ -176,7 +176,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  thread_foreach (check_thread_sleep, NULL);
+  block_thread_foreach (check_thread_sleep, NULL);
 
   if(thread_mlfqs){
     increase_recent_cpu();
