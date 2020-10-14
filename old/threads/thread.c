@@ -251,6 +251,19 @@ thread_unblock (struct thread *t)
   enum intr_level old_level;
 
   ASSERT (is_thread (t));
+  old_level = intr_disable ();
+  ASSERT (t->status == THREAD_BLOCKED);
+  list_push_back (&ready_list, &t->elem);
+  t->status = THREAD_READY;
+  intr_set_level (old_level);
+}
+
+void
+thread_unblock_inlist (struct thread *t) 
+{
+  enum intr_level old_level;
+
+  ASSERT (is_thread (t));
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
@@ -346,7 +359,7 @@ check_thread_sleep (struct thread* t,void *aux)
   if(t->blocked_ticks>0){
     t->blocked_ticks--;
     if(t->blocked_ticks==0)
-      thread_unblock(t);
+      thread_unblock_inlist(t);
   }
 }
 /* Invoke function 'func' on all threads, passing along 'aux'.
