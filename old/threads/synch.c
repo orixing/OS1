@@ -366,7 +366,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock_held_by_current_thread (lock));
 
   if (!list_empty (&cond->waiters)) {
-    struct list_elem * max_priority = list_min (&cond->waiters,cond_cmp_priority,NULL);
+    struct list_elem *max_priority = list_min (&cond->waiters,cond_cmp_priority,NULL);
     list_remove (max_priority);
     sema_up (&list_entry (max_priority,struct semaphore_elem, elem)->semaphore);
   }

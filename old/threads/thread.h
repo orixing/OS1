@@ -93,12 +93,16 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-    struct list_elem block_elem;
 
+   struct list_elem block_elem; 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 #endif
+
+    /* Owned by thread.c. */
+    unsigned magic;                     /* Detects stack overflow. */
+    
     /*new members are all below*/
     int64_t blocked_ticks;              /* Ticks of thread should be blocked through timer_sleep() */
 
@@ -107,9 +111,6 @@ struct thread
     int old_priority;                   /* Priority before donation */
     int nice;                           /* Nice of thread */
     real recent_cpu;
-
-    /* Owned by thread.c. */
-    unsigned magic;                     /* Detects stack overflow. */
   };
 
 /* If false (default), use round-robin scheduler.
@@ -140,7 +141,6 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
-void block_thread_foreach (thread_action_func *func, void *aux);
 
 /*new function*/
 void check_thread_sleep (struct thread* t,void *aux);
